@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Chatbot</title>
+
+  <!-- Liên kết tới file CSS -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <img src="https://cdn-icons-png.flaticon.com/512/387/387561.png" alt="Bot Avatar">
+      <div class="info">
+        <h2>Medical Chatbot</h2>
+        <p>Ask me anything!</p>
+      </div>
+    </div>
+
+    <!-- Chat body -->
+    <div class="chat-body" id="chat-body">
+      <div class="bot-message">Hello! How can I help you today?</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="chat-footer">
+      <input type="text" id="user-input" placeholder="Type your message...">
+      <button id="send-btn">➤</button>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const chatBody = document.getElementById("chat-body");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    function appendMessage(message, sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add(sender === "user" ? "user-message" : "bot-message");
+      msgDiv.textContent = message;
+      chatBody.appendChild(msgDiv);
+      chatBody.scrollTop = chatBody.scrollHeight; // auto scroll xuống cuối
+    }
+
+    async function sendMessage() {
+      const msg = userInput.value.trim();
+      if (!msg) return;
+
+      // Hiển thị tin nhắn user
+      appendMessage(msg, "user");
+      userInput.value = "";
+
+      // Gửi tới Flask
+      try {
+        const res = await fetch("/get", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `msg=${encodeURIComponent(msg)}`
+        });
+        const data = await res.text();
+
+        // Hiển thị tin nhắn bot
+        appendMessage(data, "bot");
+      } catch (err) {
+        appendMessage("❌ Error connecting to server", "bot");
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+  
+</body>
+</html>
